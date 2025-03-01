@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
  
 struct Action
 {
@@ -21,17 +22,19 @@ int main(int argc, char* argv[])
     double* arr = malloc(8);
     action* act = malloc(9);
     int currindex_num = 0, nested = 0, maxnested = 0, digitsafterdecimal = 1, hasdecimal = 0, totalcalculations = 0;
-    for (int i = 0; i < strlen(input); ++i) //parser
+    //printf("%d", strlen(input));
+    for (int i = 0; i < strlen(input)-1; ++i) //parser
     {
         switch (input[i])
         {
             
             case '+': {action a; a.action = '+'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = currindex_num; a.id2 = currindex_num+1; a.priority = 1; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
-            case '-': {action a; a.action = '-'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = currindex_num; a.id2 = currindex_num+1; a.priority = 1; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
+            case '-': {action a; a.action = '-'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = i==0||input[i-1]=='('?-2:currindex_num; a.id2 = currindex_num+1; a.priority = 1; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
             case '*': {action a; a.action = '*'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = currindex_num; a.id2 = currindex_num+1; a.priority = 3; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
             case '/': {action a; a.action = '/'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = currindex_num; a.id2 = currindex_num+1; a.priority = 3; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
-            case '(': {action a; a.action = '('; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = -1; a.id2 = -1; a.priority = 5+nested; ++nested; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
-            case ')': {action a; a.action = ')'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; --nested; a.id1 = -1; a.id2 = -1; a.priority = 5+nested; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
+            case '(': {action a; a.action = '('; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = -1; a.id2 = -1; a.priority = 6+nested; ++nested; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
+            case ')': {action a; a.action = ')'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; --nested; a.id1 = -1; a.id2 = -1; a.priority = 6+nested; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
+            case '^': {action a; a.action = '^'; arr[currindex_num]/=digitsafterdecimal;  digitsafterdecimal = 1; hasdecimal = 0; a.id1 = currindex_num; a.id2 = currindex_num+1; a.priority = 5; act[currindex_num] = a; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(currindex_num+1)); arr[currindex_num] = 0; break;}
             case '1':
             case '2':
             case '3':
@@ -49,7 +52,7 @@ int main(int argc, char* argv[])
                 break;
             }
             case '.': hasdecimal = 1; break;
-            default: printf("unrecognised characted"); return 1;
+            default: printf("unrecognised characted\n"); return 1;
         }
         if(nested>maxnested) maxnested = nested;
     }
@@ -57,7 +60,7 @@ int main(int argc, char* argv[])
 
     if (nested)
     {
-        printf("not all parentesis were closed");
+        printf("not all parentesis were closed\n");
         return 1;
     }
 
@@ -69,8 +72,50 @@ int main(int argc, char* argv[])
     {
         for (int i = 0; i < currindex_num; ++i) //search for 5+ priority (parentesis' searcher) 
         {
-            if(act[i].priority==5+c) 
+            if(act[i].priority==6+c) 
             {
+                for (int x = 1;x < currindex_num-i-1;++x) // negative numbers
+                {
+                    if (act[i+x].action==')') break; //if the parenthesis closes
+                    if (act[i+x].action=='(') 
+                    {
+                        ++nested;
+                        while (nested>0)
+                        {
+                            ++x;
+                            if (act[i+x].action==')') --nested;
+                            else if (act[i+x].action=='(') ++nested;
+                        }
+                    }
+
+                    if (act[i+x].id1==-2)
+                    {
+                        ++ran;
+                        priority_list[currpriority++] = i+x;
+                    }
+                }
+
+                for (int x = 1;x < currindex_num-i-1;++x) // exponents
+                {
+                    if (act[i+x].action==')') break; //if the parenthesis closes
+                    if (act[i+x].action=='(') 
+                    {
+                        ++nested;
+                        while (nested>0)
+                        {
+                            ++x;
+                            if (act[i+x].action==')') --nested;
+                            else if (act[i+x].action=='(') ++nested;
+                        }
+                    }
+
+                    if (act[i+x].priority==5)
+                    {
+                        ++ran;
+                        priority_list[currpriority++] = i+x;
+                    }
+                }
+
                 for (int x = 1;x < currindex_num-i-1;++x) // multiplication / division
                 {
                     if (act[i+x].action==')') break; //if the parenthesis closes
@@ -87,7 +132,7 @@ int main(int argc, char* argv[])
 
                     if (act[i+x].priority==3)
                     {
-                        ran++;
+                        ++ran;
                         priority_list[currpriority++] = i+x;
                     }
                 }
@@ -106,13 +151,24 @@ int main(int argc, char* argv[])
                         }
                     }
 
-                    if (act[i+x].priority==1)
+                    if (act[i+x].priority==1&&act[i+x].id1!=-2)
                     {
-                        ran++;
+                        ++ran;
                         priority_list[currpriority++] = i+x;
                     }
                 }
             }
+        }
+    }
+
+    for (int i = 0; i < currindex_num; ++i) //search for 5 priority exponentation outside of parenthesis'
+    {
+        if (act[i].action=='(') {isinparenthesis = 1; continue;}
+        if (act[i].action==')') {isinparenthesis = 0; continue;}
+        
+        if (!isinparenthesis)
+        {
+            if(act[i].priority==5) {++ran; priority_list[currpriority++] = i;}
         }
     }
 
@@ -123,7 +179,7 @@ int main(int argc, char* argv[])
         
         if (!isinparenthesis)
         {
-            if(act[i].priority==3) {ran++; priority_list[currpriority++] = i;}
+            if(act[i].priority==3) {++ran; priority_list[currpriority++] = i;}
         }
     }
 
@@ -133,7 +189,7 @@ int main(int argc, char* argv[])
         if (act[i].action==')') {isinparenthesis = 0; continue;}
         if (!isinparenthesis)
         {
-            if(act[i].priority==1) {ran++; priority_list[currpriority++] = i;}
+            if(act[i].priority==1) {++ran; priority_list[currpriority++] = i;}
         }
     }
 
@@ -141,13 +197,15 @@ int main(int argc, char* argv[])
     {
         if(ran)
         {
+            //printf("%lf%c%lf  %d\n", arr[act[priority_list[i]].id1], act[priority_list[i]].action, arr[act[priority_list[i]].id2], i);
             switch (act[priority_list[i]].action)
             {           
                 case '+': arr[act[priority_list[i]].id1]+=arr[act[priority_list[i]].id2]; if (priority_list[i]<priority_list[i+1]) {act[priority_list[i+1]].id1 = act[priority_list[i]].id1;} else {act[priority_list[i+1]].id2 = act[priority_list[i]].id1;} break;
-                case '-': arr[act[priority_list[i]].id1]-=arr[act[priority_list[i]].id2]; if (priority_list[i]<priority_list[i+1]) {act[priority_list[i+1]].id1 = act[priority_list[i]].id1;} else {act[priority_list[i+1]].id2 = act[priority_list[i]].id1;} break;
+                case '-': act[priority_list[i]].id1==-2?(arr[act[priority_list[i]].id1] = 0 - arr[act[priority_list[i]].id2]):(arr[act[priority_list[i]].id1]-=arr[act[priority_list[i]].id2]); if (priority_list[i]<priority_list[i+1]) {act[priority_list[i+1]].id1 = act[priority_list[i]].id1;} else {act[priority_list[i+1]].id2 = act[priority_list[i]].id1;} break;
                 case '*': arr[act[priority_list[i]].id1]*=arr[act[priority_list[i]].id2]; if (priority_list[i]<priority_list[i+1]) {act[priority_list[i+1]].id1 = act[priority_list[i]].id1;} else {act[priority_list[i+1]].id2 = act[priority_list[i]].id1;} break;
                 case '/': if (arr[act[priority_list[i]].id2]==0) {printf("division by 0"); return 1;} arr[act[priority_list[i]].id1]/=arr[act[priority_list[i]].id2]; if (priority_list[i]<priority_list[i+1]) {act[priority_list[i+1]].id1 = act[priority_list[i]].id1;} else {act[priority_list[i+1]].id2 = act[priority_list[i]].id1;} break;
-                default: printf("unpredicted behaviour"); return 1;  // this shouldn't be possible, in the perfect world
+                case '^': arr[act[priority_list[i]].id1] = pow(arr[act[priority_list[i]].id1], arr[act[priority_list[i]].id2]); if (priority_list[i]<priority_list[i+1]) {act[priority_list[i+1]].id1 = act[priority_list[i]].id1;} else {act[priority_list[i+1]].id2 = act[priority_list[i]].id1;} break;
+                default: printf("unpredicted behaviour\n"); return 1;  // this shouldn't be possible, in the perfect world
             }
         }
         else
@@ -156,5 +214,5 @@ int main(int argc, char* argv[])
         }
     }
 
-    printf("%lf\n", arr[act[priority_list[ran]].id1], ran);
+    printf("%.*g\n", arr[act[priority_list[ran-1]].id1]);
 }
