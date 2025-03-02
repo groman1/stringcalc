@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
         {
             
             case '+': {act[ran+currindex_num].action = '+'; arr[currindex_num]/=digitsafterdecimal; digitsafterdecimal = 1; hasdecimal = 0; act[ran+currindex_num].id1 = currindex_num; act[ran+currindex_num].id2 = currindex_num+1; act[ran+currindex_num].priority = 1; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(ran+currindex_num+1)); arr[currindex_num] = 0; break;}
-            case '-': {act[ran+currindex_num].action = '-'; arr[currindex_num]/=digitsafterdecimal; digitsafterdecimal = 1; hasdecimal = 0; if(i==0||input[i-1]=='('){ act[ran+currindex_num].id1=-2;act[ran+currindex_num].id2 = currindex_num; } else {act[ran+currindex_num].id1 = currindex_num; act[ran+currindex_num].id2 = currindex_num+1;} act[ran+currindex_num].priority = 1; if (act[ran+currindex_num].id1!=-2) { ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); arr[currindex_num] = 0; } act=realloc(act, sizeof(action)*(ran+currindex_num+1)); break;}
+            case '-': {act[ran+currindex_num].action = '-'; arr[currindex_num]/=digitsafterdecimal; digitsafterdecimal = 1; hasdecimal = 0; if(i==0||input[i-1]=='('){ act[ran+currindex_num].id1=-2;act[ran+currindex_num].id2 = currindex_num; } else {act[ran+currindex_num].id1 = currindex_num; act[ran+currindex_num].id2 = currindex_num+1;} act[ran+currindex_num].priority = 1; if (act[ran+currindex_num].id1!=-2) { ++currindex_num;  arr=realloc(arr, 8*(currindex_num+1)); arr[currindex_num] = 0; } else { ++ran; } act=realloc(act, sizeof(action)*(ran+currindex_num+1)); break;}
             case '*': {act[ran+currindex_num].action = '*'; arr[currindex_num]/=digitsafterdecimal; digitsafterdecimal = 1; hasdecimal = 0; act[ran+currindex_num].id1 = currindex_num; act[ran+currindex_num].id2 = currindex_num+1; act[ran+currindex_num].priority = 3; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(ran+currindex_num+1)); arr[currindex_num] = 0; break;}
             case '/': {act[ran+currindex_num].action = '/'; arr[currindex_num]/=digitsafterdecimal; digitsafterdecimal = 1; hasdecimal = 0; act[ran+currindex_num].id1 = currindex_num; act[ran+currindex_num].id2 = currindex_num+1; act[ran+currindex_num].priority = 3; ++currindex_num; arr=realloc(arr, 8*(currindex_num+1)); act=realloc(act, sizeof(action)*(ran+currindex_num+1)); arr[currindex_num] = 0; break;}
             case '(': {act[ran+currindex_num].action = '('; arr[currindex_num]/=digitsafterdecimal; digitsafterdecimal = 1; hasdecimal = 0; act[ran+currindex_num].id1 = currindex_num; act[ran+currindex_num].id2 = -1; act[ran+currindex_num].priority = 6+nested; ++nested; ++ran; act=realloc(act, sizeof(action)*(ran+currindex_num+1)); break;}
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 
     for (int c = maxnested-1; c >= 0; --c)
     {
-        for (int i = 0; i <= totalcalculations; ++i) //search for 5+ priority (parentesis' searcher) 
+        for (int i = 0; i <= totalcalculations; ++i) //search for 6+ priority (parentesis' searcher) 
         {
             if(act[i].priority==6+c&&act[i].action=='(') 
             {
@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
                 {
                     if (act[i+x].action==')')
                     {
-                        if (act[i-1-(act[i-1].action=='s')].priority<act[i+x+1].priority) { act[i+x+1].id1 = act[i].id1; } // if the action after the par. is higher priority
-                        else { if(i+x+2<totalcalculations) {act[i+x+1].id1 = act[i-1].id1;} } // if there's nothing after the parenthesis, skip
+                        if (act[i-1-(act[i-1].action=='s')].priority<act[i+x+1].priority) { if(i+x+2<totalcalculations) { act[i+x+1].id1 = act[i].id1<0?act[i].id2:act[i].id1; } }// if the action after the par. is higher priority
+                        else { if(i+x+1<totalcalculations) {for (int f = i; f>0; --f) { if (act[f].priority<5) { act[i+x+1].id1 = act[f].id1<0?act[f].id2:act[f].id1; break; } } } } // if there's nothing after the parenthesis, skip
                         break;
                     } //if the parenthesis closes
 
@@ -96,82 +96,8 @@ int main(int argc, char* argv[])
 
                     if (act[i+x].id1==-2)
                     {
-                        arr[act[i+x].id2] = -arr[act[i+x].id2];
-                        lastaction = act[i+x].id1;
-                    }
-                }
-
-                for (int x = 1;x < totalcalculations-i;++x) // exponents
-                {
-                    if (act[i+x].action==')') 
-                    { break; } //if the parenthesis closes
-                    if (act[i+x].action=='(') 
-                    {
-                        ++nested;
-                        while (nested>0)
-                        {
-                            ++x;
-                            if (act[i+x].action==')') --nested;
-                            else if (act[i+x].action=='(') ++nested;
-                        }
-                    }
-
-                    if (act[i+x].priority==4)
-                    {
-                        arr[act[i+x].id1] = pow(arr[act[i+x].id1], arr[act[i+x].id2]);
-                        if (act[i+x+1].priority<4)
-                        {
-                            act[i+x+1].id1 = act[i+x].id1;
-                            lastaction = act[i+x].id1;
-                        }
-                    }
-                }
-
-                for (int x = 1;x < totalcalculations-i;++x) // multiplication / division
-                {
-                    if (act[i+x].action==')') 
-                    {break;} //if the parenthesis closes
-                    if (act[i+x].action=='(') 
-                    {
-                        ++nested;
-                        while (nested>0)
-                        {
-                            ++x;
-                            if (act[i+x].action==')') --nested;
-                            else if (act[i+x].action=='(') ++nested;
-                        }
-                    }
-
-                    if (act[i+x].priority==3)
-                    {
-                        arr[act[i+x].id1] = act[i+x].action=='*'?arr[act[i+x].id1]*arr[act[i+x].id2]:arr[act[i+x].id2]==0?-1, error = 1:arr[act[i+x].id1]/arr[act[i+x].id2];
-                        if (act[i+x+1].priority<3)
-                        {
-                            act[i+x+1].id1 = act[i+x].id1;
-                            lastaction = act[i+x].id1;
-                        }
-                    }
-                }
-
-                for (int x = 1;x < totalcalculations-i;++x) // addition / subtraction
-                {
-                    if (act[i+x].action==')') 
-                    {break;} //if the parenthesis closes
-                    if (act[i+x].action=='(') 
-                    {
-                        ++nested;
-                        while (nested>0)
-                        {
-                            ++x;
-                            if (act[i+x].action==')') --nested;
-                            else if (act[i+x].action=='(') ++nested;
-                        }
-                    }
-
-                    if (act[i+x].priority==1&&act[i+x].id1!=-2)
-                    {
-                        arr[act[i+x].id1]+=act[i+x].action=='+'?arr[act[i+x].id2]:-arr[act[i+x].id2];
-                        lastaction = act[i+x].id1;
+                        arr[act[i+x].id2] = 0-arr[act[i+x].id2];
+                        lastaction = act[i+x].id2;
                     }
                 }
 
@@ -194,6 +120,97 @@ int main(int argc, char* argv[])
                     {
                         arr[act[i+x].id2] = sqrt(arr[act[i+x].id2]);
                         lastaction = act[i+x].id2;
+                        
+                    }
+                }
+
+                for (int x = 1;x < totalcalculations-i;++x) // exponents
+                {
+                    if (act[i+x].action==')') 
+                    { break; } //if the parenthesis closes
+                    if (act[i+x].action=='(') 
+                    {
+                        ++nested;
+                        while (nested>0)
+                        {
+                            ++x;
+                            if (act[i+x].action==')') --nested;
+                            else if (act[i+x].action=='(') ++nested;
+                        }
+                    }
+
+                    if (act[i+x].priority==4)
+                    {
+                        arr[act[i+x].id1] = pow(arr[act[i+x].id1], arr[act[i+x].id2]);
+                        lastaction = act[i+x].id1;
+                        for (int f = i+x+1; f < totalcalculations; ++f)
+                        {
+                            if (act[f].priority<=4)
+                            {
+                                act[f].id1 = act[i+x].id1;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                for (int x = 1;x < totalcalculations-i;++x) // multiplication / division
+                {
+                    if (act[i+x].action==')') 
+                    {break;} //if the parenthesis closes
+                    if (act[i+x].action=='(') 
+                    {
+                        ++nested;
+                        while (nested>0)
+                        {
+                            ++x;
+                            if (act[i+x].action==')') --nested;
+                            else if (act[i+x].action=='(') ++nested;
+                        }
+                    }
+
+                    if (act[i+x].priority==3)
+                    {
+                        arr[act[i+x].id1] = act[i+x].action=='*'?arr[act[i+x].id1]*arr[act[i+x].id2]:arr[act[i+x].id2]==0?-1, error = 1:arr[act[i+x].id1]/arr[act[i+x].id2];
+                        lastaction = act[i+x].id1;
+                        for (int f = i+x+1; f < totalcalculations; ++f)
+                        {
+                            if (act[f].priority<=3)
+                            {
+                                act[f].id1 = act[i+x].id1;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                for (int x = 1;x < totalcalculations-i;++x) // addition / subtraction
+                {
+                    if (act[i+x].action==')') 
+                    {break;} //if the parenthesis closes
+                    if (act[i+x].action=='(') 
+                    {
+                        ++nested;
+                        while (nested>0)
+                        {
+                            ++x;
+                            if (act[i+x].action==')') --nested;
+                            else if (act[i+x].action=='(') ++nested;
+                        }
+                    }
+
+                    if (act[i+x].priority==1&&act[i+x].id1!=-2)
+                    {
+                        arr[act[i+x].id1]+=act[i+x].action=='+'?arr[act[i+x].id2]:0-arr[act[i+x].id2];
+                        lastaction = act[i+x].id1;
+                        for (int f = i+x+1; f < totalcalculations; ++f)
+                        {
+                            if (act[f].priority<=1)
+                            {
+                                act[f].id1 = act[i+x].id1;
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -202,14 +219,14 @@ int main(int argc, char* argv[])
 
     if (act[0].id1==-2) 
     {
-        arr[0] = -arr[0];
+        arr[0] = 0-arr[0];
         lastaction = 0;
     }
 
     for (int i = 0; i < totalcalculations; ++i) //search for 5 priority square root calculations outside of parenthesis'
     {
-        if (act[i].action=='(') {isinparenthesis = 1; continue;}
-        if (act[i].action==')') {isinparenthesis = 0; continue;}
+        if (act[i].action=='(') {++isinparenthesis; continue;}
+        if (act[i].action==')') {--isinparenthesis; continue;}
 
         if (!isinparenthesis)
         {
@@ -223,42 +240,67 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < totalcalculations; ++i) //search for 4 priority exponentation outside of parenthesis'
     {
-        if (act[i].action=='(') {isinparenthesis = 1; continue;}
-        if (act[i].action==')') {isinparenthesis = 0; continue;}
+        if (act[i].action=='(') {++isinparenthesis; continue;}
+        if (act[i].action==')') {--isinparenthesis; continue;}
         if (!isinparenthesis)
         {
             if(act[i].priority==4)
-            { arr[act[i].id1] = pow(arr[act[i].id1], arr[act[i].id2]); lastaction = act[i].id1; }
-            if (act[i+1].priority<4)
             {
-                act[i+1].id1 = act[i].id1<0?act[i].id2:act[i].id1;
+                arr[act[i].id1] = pow(arr[act[i].id1], arr[act[i].id2]); 
+                lastaction = act[i].id1; 
+                for (int f = i+1; f < totalcalculations; ++f)
+                {
+                    if (act[f].priority<=4)
+                    {
+                        act[f].id1 = act[i].id1;
+                        break;
+                    }
+                }
             }
         }
     }
 
     for (int i = 0; i < totalcalculations; ++i) //search for 3 priority multiplication and division outside of parenthesis'
     {
-        if (act[i].action=='(') {isinparenthesis = 1; continue;}
-        if (act[i].action==')') {isinparenthesis = 0; continue;}
+        if (act[i].action=='(') {++isinparenthesis; continue;}
+        if (act[i].action==')') {--isinparenthesis; continue;}
         if (!isinparenthesis)
         {
             if(act[i].priority==3)
-            { arr[act[i].id1] = act[i].action=='*'?arr[act[i].id1]*arr[act[i].id2]:arr[act[i].id2]==0?-1, error = 1:arr[act[i].id1]/arr[act[i].id2]; lastaction = act[i].id1; }
-            if (act[i+1].priority<3)
             {
-                act[i+1].id1 = act[i].id1<0?act[i].id2:act[i].id1;
+                arr[act[i].id1] = act[i].action=='*'?arr[act[i].id1]*arr[act[i].id2]:arr[act[i].id2]==0?-1, error = 1:arr[act[i].id1]/arr[act[i].id2];
+                lastaction = act[i].id1;
+                for (int f = i+1; f < totalcalculations; ++f)
+                {
+                    if (act[f].priority<=3)
+                    {
+                        act[f].id1 = act[i].id1;
+                        break;
+                    }
+                }
             }
         }
     }
 
     for (int i = 0; i < totalcalculations; ++i) //search for 1 priority addition and subtraction outside of parenthesis'
     {
-        if (act[i].action=='(') {isinparenthesis = 1; continue;}
-        if (act[i].action==')') {isinparenthesis = 0; continue;}
+        if (act[i].action=='(') {++isinparenthesis; continue;}
+        if (act[i].action==')') {--isinparenthesis; continue;}
         if (!isinparenthesis)
         {
             if(act[i].priority==1&&act[i].id1!=-2) 
-            { arr[act[i].id1] += act[i].action=='+'?arr[act[i].id2]:-arr[act[i].id2]; lastaction = act[i].id1; }
+            {
+                arr[act[i].id1] += act[i].action=='+'?arr[act[i].id2]:0-arr[act[i].id2]; 
+                lastaction = act[i].id1;
+                for (int f = i+1; f < totalcalculations; ++f)
+                {
+                    if (act[f].priority<=1)
+                    {
+                        act[f].id1 = act[i].id1;
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -269,4 +311,6 @@ int main(int argc, char* argv[])
     }
 
     printf("%.10g\n", arr[lastaction]); //incase the action is 
+    free(arr);
+    free(act);
 }
